@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/*
+  Design tokens — Campeonato Pro Clubs
+  Palette lifted from the club crest: deep pitch-night navy, brushed gold,
+  warm ivory type, and a single alert red reserved only for LIVE state.
+*/
+:root {
+  --navy-950: #060d1f;
+  --navy-900: #0a1530;
+  --navy-800: #0f1e42;
+  --navy-700: #16295a;
+  --navy-600: #1e3573;
+
+  --gold-400: #f3d488;
+  --gold-500: #e3b64f;
+  --gold-600: #c4952f;
+
+  --ivory: #f3f1e8;
+  --steel: #9fb0d0;
+  --steel-dim: #6c7ba0;
+
+  --live: #e2402f;
+  --win: #4caf7d;
+  --loss: #d9605a;
+
+  --background: var(--navy-950);
+  --foreground: var(--ivory);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-navy-950: var(--navy-950);
+  --color-navy-900: var(--navy-900);
+  --color-navy-800: var(--navy-800);
+  --color-navy-700: var(--navy-700);
+  --color-navy-600: var(--navy-600);
+
+  --color-gold-400: var(--gold-400);
+  --color-gold-500: var(--gold-500);
+  --color-gold-600: var(--gold-600);
+
+  --color-ivory: var(--ivory);
+  --color-steel: var(--steel);
+  --color-steel-dim: var(--steel-dim);
+
+  --color-live: var(--live);
+  --color-win: var(--win);
+  --color-loss: var(--loss);
+
+  --font-display: var(--font-oswald);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-mono-stat);
+}
+
+body {
+  background: radial-gradient(1200px 600px at 50% -10%, var(--navy-800) 0%, var(--navy-950) 55%, #04081a 100%);
+  background-attachment: fixed;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Scoreboard hairline border, echoes the double gold ring on the crest */
+.scoreboard-frame {
+  position: relative;
+  border: 1px solid rgba(227, 182, 79, 0.35);
+}
+.scoreboard-frame::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(227, 182, 79, 0.16);
+  pointer-events: none;
+}
+
+.stat-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.live-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--live);
+  box-shadow: 0 0 0 0 rgba(226, 64, 47, 0.6);
+  animation: live-pulse 1.6s ease-out infinite;
+}
+
+@keyframes live-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(226, 64, 47, 0.55); }
+  70% { box-shadow: 0 0 0 10px rgba(226, 64, 47, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(226, 64, 47, 0); }
+}
+
+::selection {
+  background: var(--gold-500);
+  color: var(--navy-950);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}

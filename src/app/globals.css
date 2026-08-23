@@ -1,10 +1,5 @@
 @import "tailwindcss";
 
-/*
-  Design tokens — Campeonato Pro Clubs
-  Palette lifted from the club crest: deep pitch-night navy, brushed gold,
-  warm ivory type, and a single alert red reserved only for LIVE state.
-*/
 :root {
   --navy-950: #060d1f;
   --navy-900: #0a1530;

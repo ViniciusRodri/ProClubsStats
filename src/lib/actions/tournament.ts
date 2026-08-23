@@ -206,6 +206,71 @@ export async function marcarComoAoVivo(matchId: string) {
   revalidatePath("/", "layout");
 }
 
+/** Exclui um confronto (série) inteiro, junto com todas as partidas e estatísticas dele. */
+export async function excluirSerie(seriesId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("series").delete().eq("id", seriesId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/confrontos");
+  revalidatePath("/admin/resultados");
+  revalidatePath("/chaveamento");
+  revalidatePath("/resultados");
+  revalidatePath("/classificacao");
+  revalidatePath("/", "layout");
+}
+
+/** Exclui apenas um jogo específico dentro de uma série (ex: refazer o jogo 2 de uma MD3). */
+export async function excluirPartida(matchId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("matches").delete().eq("id", matchId);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/confrontos");
+  revalidatePath("/admin/resultados");
+  revalidatePath("/chaveamento");
+  revalidatePath("/resultados");
+  revalidatePath("/classificacao");
+  revalidatePath("/", "layout");
+}
+
+/** Edita os times de um confronto e/ou o rótulo (ex: corrigir um sorteio errado). */
+export async function editarConfronto(seriesId: string, formData: FormData) {
+  const supabase = await createClient();
+
+  const team_home_id = String(formData.get("team_home_id") ?? "");
+  const team_away_id = String(formData.get("team_away_id") ?? "");
+  const round_label = String(formData.get("round_label") ?? "").trim() || null;
+
+  if (!team_home_id || !team_away_id) {
+    throw new Error("Selecione os dois times do confronto.");
+  }
+  if (team_home_id === team_away_id) {
+    throw new Error("Os dois times do confronto não podem ser o mesmo time.");
+  }
+
+  const { error: seriesErr } = await supabase
+    .from("series")
+    .update({ team_home_id, team_away_id, round_label })
+    .eq("id", seriesId);
+  if (seriesErr) throw new Error(seriesErr.message);
+
+  // Mantém as partidas já criadas dessa série alinhadas com os novos times,
+  // apenas para os jogos que ainda não têm placar lançado.
+  const { error: matchesErr } = await supabase
+    .from("matches")
+    .update({ team_home_id, team_away_id })
+    .eq("series_id", seriesId)
+    .is("home_score", null);
+  if (matchesErr) throw new Error(matchesErr.message);
+
+  revalidatePath("/admin/confrontos");
+  revalidatePath("/admin/resultados");
+  revalidatePath("/chaveamento");
+  revalidatePath("/resultados");
+  revalidatePath("/", "layout");
+}
+
 /** Define manualmente qual partida aparece em destaque na home (sem alterar o status). */
 export async function definirPartidaEmDestaque(matchId: string) {
   const supabase = await createClient();

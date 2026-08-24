@@ -25,6 +25,7 @@ export interface Player {
   position: string | null;
   shirt_number: number | null;
   is_goalkeeper: boolean;
+  photo_url: string | null;
   created_at: string;
 }
 

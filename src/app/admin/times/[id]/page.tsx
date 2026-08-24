@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { Trash2 } from "lucide-react";
 import { TeamCrest } from "@/components/site/team-crest";
+import { PlayerPhoto } from "@/components/site/player-photo";
 import { Panel } from "@/components/ui/primitives";
 import { getTeam, getTeamPlayers } from "@/lib/data";
 import { updateTeam } from "@/lib/actions/teams";
@@ -93,9 +94,15 @@ export default async function AdminTeamEditPage({
               <li key={p.player_id} className="px-5 py-4">
                 <form
                   action={updatePlayer.bind(null, p.player_id, team.id)}
-                  className="grid items-end gap-3 sm:grid-cols-[1fr_120px_90px_90px_auto_auto]"
+                  className="flex flex-wrap items-end gap-3"
                 >
-                  <div>
+                  <PlayerPhoto
+                    name={p.name}
+                    photoUrl={p.photo_url}
+                    size={44}
+                    className="shrink-0 rounded-full border border-navy-700"
+                  />
+                  <div className="min-w-[140px] flex-1">
                     <label className="mb-1 block text-[11px] text-steel-dim">Nome</label>
                     <input
                       name="name"
@@ -103,7 +110,7 @@ export default async function AdminTeamEditPage({
                       className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
                     />
                   </div>
-                  <div>
+                  <div className="w-28">
                     <label className="mb-1 block text-[11px] text-steel-dim">Posição</label>
                     <input
                       name="position"
@@ -111,13 +118,22 @@ export default async function AdminTeamEditPage({
                       className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
                     />
                   </div>
-                  <div>
+                  <div className="w-20">
                     <label className="mb-1 block text-[11px] text-steel-dim">Camisa</label>
                     <input
                       name="shirt_number"
                       type="number"
                       defaultValue={p.shirt_number ?? ""}
                       className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
+                    />
+                  </div>
+                  <div className="w-40">
+                    <label className="mb-1 block text-[11px] text-steel-dim">Foto</label>
+                    <input
+                      type="file"
+                      name="photo"
+                      accept="image/*"
+                      className="w-full text-[11px] text-steel-dim file:mr-2 file:rounded-md file:border-0 file:bg-navy-700 file:px-2 file:py-1 file:text-[11px] file:text-ivory"
                     />
                   </div>
                   <label className="flex items-center gap-1.5 pb-2 text-[11px] text-steel-dim">
@@ -145,11 +161,8 @@ export default async function AdminTeamEditPage({
 
         <Panel className="p-5">
           <p className="mb-3 text-sm font-semibold text-ivory">Adicionar jogador</p>
-          <form
-            action={createPlayer.bind(null, team.id)}
-            className="grid items-end gap-3 sm:grid-cols-[1fr_120px_90px_90px_auto]"
-          >
-            <div>
+          <form action={createPlayer.bind(null, team.id)} className="flex flex-wrap items-end gap-3">
+            <div className="min-w-[140px] flex-1">
               <label className="mb-1 block text-[11px] text-steel-dim">Nome</label>
               <input
                 name="name"
@@ -157,7 +170,7 @@ export default async function AdminTeamEditPage({
                 className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
               />
             </div>
-            <div>
+            <div className="w-28">
               <label className="mb-1 block text-[11px] text-steel-dim">Posição</label>
               <input
                 name="position"
@@ -165,12 +178,21 @@ export default async function AdminTeamEditPage({
                 className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
               />
             </div>
-            <div>
+            <div className="w-20">
               <label className="mb-1 block text-[11px] text-steel-dim">Camisa</label>
               <input
                 name="shirt_number"
                 type="number"
                 className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
+              />
+            </div>
+            <div className="w-40">
+              <label className="mb-1 block text-[11px] text-steel-dim">Foto</label>
+              <input
+                type="file"
+                name="photo"
+                accept="image/*"
+                className="w-full text-[11px] text-steel-dim file:mr-2 file:rounded-md file:border-0 file:bg-navy-700 file:px-2 file:py-1 file:text-[11px] file:text-ivory"
               />
             </div>
             <label className="flex items-center gap-1.5 pb-2 text-[11px] text-steel-dim">

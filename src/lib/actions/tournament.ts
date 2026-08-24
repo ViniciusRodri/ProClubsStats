@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { MatchFormat } from "@/lib/types";
 
@@ -23,14 +24,25 @@ function pairs<T>(items: T[]): [T, T][] {
   return out;
 }
 
+// Em produção o Next.js esconde a mensagem real de qualquer erro lançado
+// dentro de uma Server Action (por segurança). Por isso, em vez de `throw`,
+// essas ações redirecionam de volta para a página com a mensagem de erro
+// de verdade na URL (?erro=...), que a página lê e mostra num aviso.
+function falhar(path: string, message: string): never {
+  redirect(`${path}?erro=${encodeURIComponent(message)}`);
+}
+
 /** Sorteia os 8 times em Grupo A / Grupo B e gera os confrontos (turno único) da fase de grupos. */
 export async function sortearGrupos() {
   const supabase = await createClient();
 
   const { data: teams, error } = await supabase.from("teams").select("id, name");
-  if (error) throw new Error(error.message);
+  if (error) falhar("/admin/confrontos", error.message);
   if (!teams || teams.length !== 8) {
-    throw new Error(`É preciso ter exatamente 8 times cadastrados (atual: ${teams?.length ?? 0}).`);
+    falhar(
+      "/admin/confrontos",
+      `É preciso ter exatamente 8 times cadastrados (atual: ${teams?.length ?? 0}).`
+    );
   }
 
   // Limpa sorteio anterior da fase de grupos, se houver.
@@ -65,7 +77,7 @@ export async function sortearGrupos() {
       })
       .select()
       .single();
-    if (seriesErr) throw new Error(seriesErr.message);
+    if (seriesErr) falhar("/admin/confrontos", seriesErr.message);
 
     await supabase.from("matches").insert({
       series_id: series.id,
@@ -87,18 +99,21 @@ export async function gerarSemifinais() {
   const supabase = await createClient();
 
   const { data: standings, error } = await supabase.from("group_standings").select("*");
-  if (error) throw new Error(error.message);
+  if (error) falhar("/admin/confrontos", error.message);
 
   const groupA = (standings ?? []).filter((r) => r.group_name === "A");
   const groupB = (standings ?? []).filter((r) => r.group_name === "B");
 
   if (groupA.length < 2 || groupB.length < 2) {
-    throw new Error("Classificação incompleta. Finalize a fase de grupos antes de gerar as semifinais.");
+    falhar(
+      "/admin/confrontos",
+      "Classificação incompleta. Finalize a fase de grupos antes de gerar as semifinais."
+    );
   }
 
   const { data: existing } = await supabase.from("series").select("id").eq("stage", "semifinal");
   if (existing && existing.length > 0) {
-    throw new Error("As semifinais já foram geradas.");
+    falhar("/admin/confrontos", "As semifinais já foram geradas.");
   }
 
   const fixtures = [
@@ -114,7 +129,7 @@ export async function gerarSemifinais() {
       team_away_id: fx.away.team_id,
       round_label: fx.label,
     });
-    if (insertErr) throw new Error(insertErr.message);
+    if (insertErr) falhar("/admin/confrontos", insertErr.message);
   }
 
   revalidatePath("/admin/confrontos");
@@ -129,15 +144,15 @@ export async function gerarFinal() {
     .from("series")
     .select("*")
     .eq("stage", "semifinal");
-  if (error) throw new Error(error.message);
+  if (error) falhar("/admin/confrontos", error.message);
 
   if (!semis || semis.length < 2 || semis.some((s) => !s.winner_team_id)) {
-    throw new Error("As duas semifinais precisam estar concluídas antes de gerar a final.");
+    falhar("/admin/confrontos", "As duas semifinais precisam estar concluídas antes de gerar a final.");
   }
 
   const { data: existing } = await supabase.from("series").select("id").eq("stage", "final");
   if (existing && existing.length > 0) {
-    throw new Error("A Grande Final já foi gerada.");
+    falhar("/admin/confrontos", "A Grande Final já foi gerada.");
   }
 
   const { error: insertErr } = await supabase.from("series").insert({
@@ -147,7 +162,7 @@ export async function gerarFinal() {
     team_away_id: semis[1].winner_team_id,
     round_label: "Grande Final",
   });
-  if (insertErr) throw new Error(insertErr.message);
+  if (insertErr) falhar("/admin/confrontos", insertErr.message);
 
   revalidatePath("/admin/confrontos");
   revalidatePath("/chaveamento");
@@ -158,7 +173,7 @@ export async function adicionarJogoNaSerie(seriesId: string) {
   const supabase = await createClient();
 
   const { data: series, error } = await supabase.from("series").select("*").eq("id", seriesId).single();
-  if (error) throw new Error(error.message);
+  if (error) falhar("/admin/confrontos", error.message);
 
   const maxGames = { MD1: 1, MD3: 3, MD5: 5, MD7: 7 }[series.format as MatchFormat];
 
@@ -171,7 +186,7 @@ export async function adicionarJogoNaSerie(seriesId: string) {
 
   const nextGame = (existingMatches?.[0]?.game_number ?? 0) + 1;
   if (nextGame > maxGames) {
-    throw new Error(`A série ${series.format} já atingiu o número máximo de jogos.`);
+    falhar("/admin/confrontos", `A série ${series.format} já atingiu o número máximo de jogos.`);
   }
 
   const { error: insertErr } = await supabase.from("matches").insert({
@@ -181,7 +196,7 @@ export async function adicionarJogoNaSerie(seriesId: string) {
     team_away_id: series.team_away_id,
     status: "agendado",
   });
-  if (insertErr) throw new Error(insertErr.message);
+  if (insertErr) falhar("/admin/confrontos", insertErr.message);
 
   revalidatePath("/admin/confrontos");
   revalidatePath("/admin/resultados");
@@ -199,7 +214,7 @@ export async function marcarComoAoVivo(matchId: string) {
     .from("matches")
     .update({ status: "ao_vivo", started_at: new Date().toISOString() })
     .eq("id", matchId);
-  if (error) throw new Error(error.message);
+  if (error) falhar(`/admin/resultados/${matchId}`, error.message);
 
   await supabase.from("tournament_settings").update({ featured_match_id: matchId }).eq("id", 1);
 
@@ -210,7 +225,7 @@ export async function marcarComoAoVivo(matchId: string) {
 export async function excluirSerie(seriesId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("series").delete().eq("id", seriesId);
-  if (error) throw new Error(error.message);
+  if (error) falhar("/admin/confrontos", error.message);
 
   revalidatePath("/admin/confrontos");
   revalidatePath("/admin/resultados");
@@ -224,7 +239,7 @@ export async function excluirSerie(seriesId: string) {
 export async function excluirPartida(matchId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("matches").delete().eq("id", matchId);
-  if (error) throw new Error(error.message);
+  if (error) falhar("/admin/confrontos", error.message);
 
   revalidatePath("/admin/confrontos");
   revalidatePath("/admin/resultados");
@@ -243,17 +258,17 @@ export async function editarConfronto(seriesId: string, formData: FormData) {
   const round_label = String(formData.get("round_label") ?? "").trim() || null;
 
   if (!team_home_id || !team_away_id) {
-    throw new Error("Selecione os dois times do confronto.");
+    falhar("/admin/confrontos", "Selecione os dois times do confronto.");
   }
   if (team_home_id === team_away_id) {
-    throw new Error("Os dois times do confronto não podem ser o mesmo time.");
+    falhar("/admin/confrontos", "Os dois times do confronto não podem ser o mesmo time.");
   }
 
   const { error: seriesErr } = await supabase
     .from("series")
     .update({ team_home_id, team_away_id, round_label })
     .eq("id", seriesId);
-  if (seriesErr) throw new Error(seriesErr.message);
+  if (seriesErr) falhar("/admin/confrontos", seriesErr.message);
 
   // Mantém as partidas já criadas dessa série alinhadas com os novos times,
   // apenas para os jogos que ainda não têm placar lançado.
@@ -262,7 +277,7 @@ export async function editarConfronto(seriesId: string, formData: FormData) {
     .update({ team_home_id, team_away_id })
     .eq("series_id", seriesId)
     .is("home_score", null);
-  if (matchesErr) throw new Error(matchesErr.message);
+  if (matchesErr) falhar("/admin/confrontos", matchesErr.message);
 
   revalidatePath("/admin/confrontos");
   revalidatePath("/admin/resultados");
@@ -278,6 +293,6 @@ export async function definirPartidaEmDestaque(matchId: string) {
     .from("tournament_settings")
     .update({ featured_match_id: matchId })
     .eq("id", 1);
-  if (error) throw new Error(error.message);
+  if (error) falhar(`/admin/resultados/${matchId}`, error.message);
   revalidatePath("/", "layout");
 }

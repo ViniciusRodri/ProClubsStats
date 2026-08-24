@@ -7,8 +7,10 @@ import { salvarResultado, registrarWO, salvarEstatisticaJogador } from "@/lib/ac
 
 export default async function AdminMatchPage({
   params,
+  searchParams,
 }: PageProps<"/admin/resultados/[matchId]">) {
   const { matchId } = await params;
+  const { erro } = await searchParams;
   const match = await getMatchById(matchId);
   if (!match) notFound();
 
@@ -22,6 +24,12 @@ export default async function AdminMatchPage({
 
   return (
     <div className="space-y-8">
+      {erro && (
+        <div className="rounded-xl border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss">
+          {Array.isArray(erro) ? erro[0] : erro}
+        </div>
+      )}
+
       <div className="flex flex-wrap items-center gap-3">
         <StatusBadge status={match.status} />
         <FormatBadge format={match.series.format} />

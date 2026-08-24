@@ -158,8 +158,11 @@ async function SeriesBlock({
   );
 }
 
-export default async function AdminConfrontosPage() {
+export default async function AdminConfrontosPage({
+  searchParams,
+}: PageProps<"/admin/confrontos">) {
   const teams = await getTeams();
+  const { erro } = await searchParams;
 
   return (
     <div className="space-y-10">
@@ -167,6 +170,12 @@ export default async function AdminConfrontosPage() {
         <p className="font-display text-xs uppercase tracking-[0.28em] text-gold-500">Chaveamento</p>
         <h1 className="font-display text-2xl font-bold text-ivory">Confrontos</h1>
       </div>
+
+      {erro && (
+        <div className="rounded-xl border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss">
+          {Array.isArray(erro) ? erro[0] : erro}
+        </div>
+      )}
 
       <Panel className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
         <div>

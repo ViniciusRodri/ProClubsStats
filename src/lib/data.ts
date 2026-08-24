@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { comparePlayersByPosition } from "@/lib/positions";
 import type {
   Team,
   Player,
@@ -23,14 +24,11 @@ export async function getTeam(id: string): Promise<Team | null> {
   return data;
 }
 
+// Ordem de exibição do elenco: GOL, LATERAL, ZAGUEIRO, VOL, MEIO CAMPO, ATACANTES.
 export async function getTeamRoster(teamId: string): Promise<Player[]> {
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("players")
-    .select("*")
-    .eq("team_id", teamId)
-    .order("shirt_number", { ascending: true, nullsFirst: false });
-  return data ?? [];
+  const { data } = await supabase.from("players").select("*").eq("team_id", teamId);
+  return (data ?? []).sort(comparePlayersByPosition);
 }
 
 export async function getTeamPlayers(teamId: string) {
@@ -38,9 +36,8 @@ export async function getTeamPlayers(teamId: string) {
   const { data } = await supabase
     .from("player_season_stats")
     .select("*")
-    .eq("team_id", teamId)
-    .order("goals", { ascending: false });
-  return data ?? [];
+    .eq("team_id", teamId);
+  return (data ?? []).sort(comparePlayersByPosition);
 }
 
 export async function getGroupStandings() {

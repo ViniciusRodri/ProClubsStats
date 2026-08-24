@@ -6,6 +6,7 @@ import { Panel } from "@/components/ui/primitives";
 import { getTeam, getTeamPlayers } from "@/lib/data";
 import { updateTeam } from "@/lib/actions/teams";
 import { createPlayer, deletePlayer, updatePlayer } from "@/lib/actions/players";
+import { POSITIONS } from "@/lib/positions";
 
 export default async function AdminTeamEditPage({
   params,
@@ -110,13 +111,20 @@ export default async function AdminTeamEditPage({
                       className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
                     />
                   </div>
-                  <div className="w-28">
+                  <div className="w-32">
                     <label className="mb-1 block text-[11px] text-steel-dim">Posição</label>
-                    <input
+                    <select
                       name="position"
                       defaultValue={p.position ?? ""}
                       className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
-                    />
+                    >
+                      <option value="">—</option>
+                      {POSITIONS.map((pos) => (
+                        <option key={pos.value} value={pos.value}>
+                          {pos.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div className="w-20">
                     <label className="mb-1 block text-[11px] text-steel-dim">Camisa</label>
@@ -170,13 +178,20 @@ export default async function AdminTeamEditPage({
                 className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
               />
             </div>
-            <div className="w-28">
+            <div className="w-32">
               <label className="mb-1 block text-[11px] text-steel-dim">Posição</label>
-              <input
+              <select
                 name="position"
-                placeholder="Ex: ATA"
+                defaultValue=""
                 className="w-full rounded-lg border border-navy-700 bg-navy-800 px-2.5 py-1.5 text-sm text-ivory outline-none focus:border-gold-500/60"
-              />
+              >
+                <option value="">—</option>
+                {POSITIONS.map((pos) => (
+                  <option key={pos.value} value={pos.value}>
+                    {pos.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="w-20">
               <label className="mb-1 block text-[11px] text-steel-dim">Camisa</label>

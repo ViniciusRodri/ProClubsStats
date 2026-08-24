@@ -3,8 +3,14 @@ import { TeamCrest } from "@/components/site/team-crest";
 import { PlayerPhoto } from "@/components/site/player-photo";
 import { Panel, Eyebrow } from "@/components/ui/primitives";
 import { getTeam, getTeamPlayers } from "@/lib/data";
+import { POSITIONS } from "@/lib/positions";
 
 export const revalidate = 60;
+
+function positionLabel(position: string | null) {
+  if (!position) return "—";
+  return POSITIONS.find((p) => p.value === position)?.label ?? position;
+}
 
 export default async function TeamDetailPage({
   params,
@@ -62,7 +68,7 @@ export default async function TeamDetailPage({
                     {p.name}
                   </p>
                   <p className="mb-2.5 truncate text-[11px] text-steel-dim">
-                    {p.position ?? "—"}
+                    {positionLabel(p.position)}
                   </p>
                   <div className="grid grid-cols-4 gap-1 border-t border-navy-700/60 pt-2 text-center">
                     <div>

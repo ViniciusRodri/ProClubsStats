@@ -5,8 +5,11 @@ import { Panel } from "@/components/ui/primitives";
 import { getTeams } from "@/lib/data";
 import { createTeam, deleteTeam } from "@/lib/actions/teams";
 
-export default async function AdminTimesPage() {
+export default async function AdminTimesPage({
+  searchParams,
+}: PageProps<"/admin/times">) {
   const teams = await getTeams();
+  const { erro } = await searchParams;
 
   return (
     <div className="space-y-8">
@@ -14,6 +17,12 @@ export default async function AdminTimesPage() {
         <p className="font-display text-xs uppercase tracking-[0.28em] text-gold-500">CRUD</p>
         <h1 className="font-display text-2xl font-bold text-ivory">Times</h1>
       </div>
+
+      {erro && (
+        <div className="rounded-xl border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss">
+          {Array.isArray(erro) ? erro[0] : erro}
+        </div>
+      )}
 
       <Panel className="p-6">
         <p className="mb-4 text-sm font-semibold text-ivory">Cadastrar novo time</p>

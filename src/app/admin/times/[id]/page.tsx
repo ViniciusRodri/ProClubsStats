@@ -10,8 +10,10 @@ import { POSITIONS } from "@/lib/positions";
 
 export default async function AdminTeamEditPage({
   params,
+  searchParams,
 }: PageProps<"/admin/times/[id]">) {
   const { id } = await params;
+  const { erro } = await searchParams;
   const team = await getTeam(id);
   if (!team) notFound();
 
@@ -19,6 +21,12 @@ export default async function AdminTeamEditPage({
 
   return (
     <div className="space-y-8">
+      {erro && (
+        <div className="rounded-xl border border-loss/30 bg-loss/10 px-4 py-3 text-sm text-loss">
+          {Array.isArray(erro) ? erro[0] : erro}
+        </div>
+      )}
+
       <div className="flex items-center gap-4">
         <TeamCrest name={team.name} logoUrl={team.logo_url} size={48} />
         <div>
